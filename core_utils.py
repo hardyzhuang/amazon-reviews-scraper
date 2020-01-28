@@ -2,6 +2,7 @@ import errno
 from time import sleep
 
 import json
+import csv 
 import logging
 import os
 import re
@@ -48,6 +49,40 @@ def persist_comment_to_disk(reviews):
         json.dump(reviews, fp, sort_keys=True, indent=4, ensure_ascii=False)
     return True
 
+
+def get_reviews_csv_filename(product_id):
+    filename = os.path.join(OUTPUT_DIR, '{}.csv'.format(product_id))
+    exist = os.path.isfile(filename)
+    return filename, exist
+
+
+def persist_comment_to_disk_in_csv(reviews):
+    if len(reviews) == 0:
+        return False
+    product_id_set = set([r['product_id'] for r in reviews])
+    assert len(product_id_set) == 1, 'all product ids should be the same in the reviews list.'
+    product_id = next(iter(product_id_set))
+    output_filename, exist = get_reviews_csv_filename(product_id)
+    if exist:
+        return False
+    mkdir_p(OUTPUT_DIR)
+    
+    # reviews.append({'title': title,
+    #                         'rating': rating,
+    #                         'body': body,
+    #                         'product_id': product_id,
+    #                         'author_url': author_url,
+    #                         'review_url': review_url,
+    #                         'review_date': review_date,
+
+    with open(output_filename, 'w', encoding='utf-8') as fp:
+        fieldnames = ['Title', 'Rating', 'Date', 'Comment', 'author_url', 'review_url']
+        writer = csv.DictWriter(fp, fieldnames=fieldnames)
+        writer.writeheader()
+        tableTitle = "{:50}\t{:20}"
+        for review_entry in reviews:
+            writer.writerow({'Title': review_entry[0]})
+    return True
 
 def extract_product_id(link_from_main_page):
     # e.g. B01H8A7Q42

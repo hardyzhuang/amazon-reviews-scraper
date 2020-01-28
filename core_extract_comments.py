@@ -4,8 +4,7 @@ import re
 import textwrap
 
 from constants import AMAZON_BASE_URL
-from core_utils import get_soup, persist_comment_to_disk
-
+from core_utils import get_soup, persist_comment_to_disk, persist_comment_to_disk_in_csv
 
 # https://www.amazon.co.jp/product-reviews/B00Z16VF3E/ref=cm_cr_arp_d_paging_btm_1?ie=UTF8&reviewerType=all_reviews&showViewpoints=1&sortBy=helpful&pageNumber=1
 
@@ -108,6 +107,7 @@ def get_comments_with_product_id(product_id):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    _reviews = get_comments_with_product_id('B00BV0W8RQ')
-    print(_reviews)
-    persist_comment_to_disk(_reviews)
+    # product_id = 'B07Y414QXJ'
+    _reviews = get_comments_with_product_id('B07Y414QXJ')
+    # print(_reviews)
+    persist_comment_to_disk_in_csv(_reviews)
