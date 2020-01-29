@@ -94,20 +94,31 @@ def get_comments_with_product_id(product_id):
             logging.info('REVIEW URL  = ' + review_url if review_url else '')
             logging.info('REVIEW DATE  = ' + review_date if review_date else '')
             logging.info('***********************************************\n')
+
             reviews.append({'title': title,
                             'rating': rating,
                             'body': body,
+                            'helpful': helpful,
                             'product_id': product_id,
                             'author_url': author_url,
                             'review_url': review_url,
-                            'review_date': review_date,
+                            'review_date': review_date
                            })
+            review_row = {'title': title,
+                            'rating': rating,
+                            'body': body,
+                            'helpful': helpful,
+                            'product_id': product_id,
+                            'author_url': author_url,
+                            'review_url': review_url,
+                            'review_date': review_date}
+            persist_comment_to_disk_in_csv(review_row)
     return reviews
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     # product_id = 'B07Y414QXJ'
-    _reviews = get_comments_with_product_id('B07Y414QXJ')
-    # print(_reviews)
-    persist_comment_to_disk_in_csv(_reviews)
+    _reviews = get_comments_with_product_id('B00CYX26BC')
+    
+    persist_comment_to_disk(_reviews)

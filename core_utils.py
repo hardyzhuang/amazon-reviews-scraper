@@ -56,32 +56,26 @@ def get_reviews_csv_filename(product_id):
     return filename, exist
 
 
-def persist_comment_to_disk_in_csv(reviews):
-    if len(reviews) == 0:
+def persist_comment_to_disk_in_csv(review):
+    if len(review) == 0:
         return False
-    product_id_set = set([r['product_id'] for r in reviews])
-    assert len(product_id_set) == 1, 'all product ids should be the same in the reviews list.'
-    product_id = next(iter(product_id_set))
+    product_id = review['product_id']
     output_filename, exist = get_reviews_csv_filename(product_id)
-    if exist:
-        return False
     mkdir_p(OUTPUT_DIR)
     
-    # reviews.append({'title': title,
-    #                         'rating': rating,
-    #                         'body': body,
-    #                         'product_id': product_id,
-    #                         'author_url': author_url,
-    #                         'review_url': review_url,
-    #                         'review_date': review_date,
-
-    with open(output_filename, 'w', encoding='utf-8') as fp:
-        fieldnames = ['Title', 'Rating', 'Date', 'Comment', 'author_url', 'review_url']
+    with open(output_filename, 'a+', encoding='utf-8', newline='') as fp:
+        fieldnames = ['Title', 'Comment', 'Rating', 'Date', 'Helpful', 'author_url', 'review_url']
         writer = csv.DictWriter(fp, fieldnames=fieldnames)
-        writer.writeheader()
-        tableTitle = "{:50}\t{:20}"
-        for review_entry in reviews:
-            writer.writerow({'Title': review_entry[0]})
+        if not(exist):
+            writer.writeheader()
+            tableTitle = "{:50}\t{:20}"
+        writer.writerow({'Title': review['title'], 
+                        'Comment': review['body'], 
+                        'Rating': review['rating'], 
+                        'Date': review['review_date'], 
+                        'Helpful': review['helpful'],
+                        'author_url': review['author_url'], 
+                        'review_url': review['review_url'] })
     return True
 
 def extract_product_id(link_from_main_page):
@@ -107,7 +101,8 @@ def get_soup(url):
     logging.debug('Script is going to sleep for {} (Amazon throttling). ZZZzzzZZZzz.'.format(nap_time_sec))
     sleep(nap_time_sec)
     header = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36'
+        # 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.74 Safari/537.36 Edg/79.0.309.43'
     }
     logging.debug('-> to Amazon : {}'.format(url))
     out = requests.get(url, headers=header)
