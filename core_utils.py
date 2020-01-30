@@ -50,8 +50,8 @@ def persist_comment_to_disk(reviews):
     return True
 
 
-def get_reviews_csv_filename(product_id):
-    filename = os.path.join(OUTPUT_DIR, '{}.csv'.format(product_id))
+def get_reviews_csv_filename(product_title, product_id):
+    filename = os.path.join(OUTPUT_DIR, '{0} - {1}.csv'.format(product_title, product_id))
     exist = os.path.isfile(filename)
     return filename, exist
 
@@ -60,7 +60,8 @@ def persist_comment_to_disk_in_csv(review):
     if len(review) == 0:
         return False
     product_id = review['product_id']
-    output_filename, exist = get_reviews_csv_filename(product_id)
+    product_title = review['product_title']
+    output_filename, exist = get_reviews_csv_filename(product_title, product_id)
     mkdir_p(OUTPUT_DIR)
     
     with open(output_filename, 'a+', encoding='utf-8', newline='') as fp:

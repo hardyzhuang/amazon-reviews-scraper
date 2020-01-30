@@ -1,9 +1,10 @@
+import argparse
 import logging
 import math
 import re
 import textwrap
 
-from constants import AMAZON_BASE_URL, PRODUCT_ID
+from constants import AMAZON_BASE_URL, PREDEFINED_PRODUCT_ID
 from core_utils import get_soup, persist_comment_to_disk, persist_comment_to_disk_in_csv
 
 # https://www.amazon.co.jp/product-reviews/B00Z16VF3E/ref=cm_cr_arp_d_paging_btm_1?ie=UTF8&reviewerType=all_reviews&showViewpoints=1&sortBy=helpful&pageNumber=1
@@ -41,6 +42,14 @@ def get_comments_with_product_id(product_id):
 
     product_reviews_link = get_product_reviews_url(product_id)
     so = get_soup(product_reviews_link)
+
+    product_title = so.find(attrs = {'data-hook': 'product-link'})
+    if product_title is None:
+        product_title = 'unknown'
+    else:
+        product_title = product_title.text
+    logging.info('product title: {}'.format(product_title))
+
     max_page_number = so.find(attrs={'data-hook': 'total-review-count'})
     if max_page_number is None:
         return reviews
@@ -95,9 +104,9 @@ def get_comments_with_product_id(product_id):
             # logging.info('REVIEW DATE  = ' + review_date if review_date else '')
             # logging.info('***********************************************\n')
 
-            logging.info(   review_date if review_date else '--/--/----' + \
-                            '\tRating:' + rating + \
-                            '\t ' + title)
+            print( '{:<20s}'.format(review_date if review_date else '--/--/----') + \
+                    '\tRating:' + rating + \
+                    '\t ' + title)
 
             reviews.append({'title': title,
                             'rating': rating,
@@ -108,21 +117,29 @@ def get_comments_with_product_id(product_id):
                             'review_url': review_url,
                             'review_date': review_date
                            })
-            review_row = {'title': title,
+            review_row = {  'title': title,
                             'rating': rating,
                             'body': body,
                             'helpful': helpful,
                             'product_id': product_id,
                             'author_url': author_url,
                             'review_url': review_url,
-                            'review_date': review_date}
+                            'review_date': review_date,
+                            'product_title': product_title
+                        }
             persist_comment_to_disk_in_csv(review_row)
     return reviews
 
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    # product_id = 'B07Y414QXJ'
-    _reviews = get_comments_with_product_id(PRODUCT_ID)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--product_id')
+    args = parser.parse_args()
+    input_product_id = args.product_id
+    product_id = input_product_id if input_product_id else PREDEFINED_PRODUCT_ID
+    logging.info('Product ID:{:>20s}'.format(product_id,))
+
+    _reviews = get_comments_with_product_id(product_id)
     
     persist_comment_to_disk(_reviews)
