@@ -85,15 +85,19 @@ def get_comments_with_product_id(product_id):
                 # logging.warning('Could not find any helpful-vote-statement tag.')
                 helpful = ''
 
-            logging.info('***********************************************')
-            logging.info('TITLE    = ' + title)
-            logging.info('RATING   = ' + rating)
-            logging.info('CONTENT  = ' + '\n'.join(textwrap.wrap(body, 80)))
-            logging.info('HELPFUL  = ' + helpful)
-            logging.info('AUTHOR URL  = ' + author_url if author_url else '')
-            logging.info('REVIEW URL  = ' + review_url if review_url else '')
-            logging.info('REVIEW DATE  = ' + review_date if review_date else '')
-            logging.info('***********************************************\n')
+            # logging.info('***********************************************')
+            # logging.info('TITLE    = ' + title)
+            # logging.info('RATING   = ' + rating)
+            # logging.info('CONTENT  = ' + '\n'.join(textwrap.wrap(body, 80)))
+            # logging.info('HELPFUL  = ' + helpful)
+            # logging.info('AUTHOR URL  = ' + author_url if author_url else '')
+            # logging.info('REVIEW URL  = ' + review_url if review_url else '')
+            # logging.info('REVIEW DATE  = ' + review_date if review_date else '')
+            # logging.info('***********************************************\n')
+
+            logging.info(   review_date if review_date else '--/--/----' + \
+                            '\tRating:' + rating + \
+                            '\t ' + title)
 
             reviews.append({'title': title,
                             'rating': rating,
