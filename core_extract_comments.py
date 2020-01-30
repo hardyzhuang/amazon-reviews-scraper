@@ -3,6 +3,7 @@ import logging
 import math
 import re
 import textwrap
+import string
 
 from constants import AMAZON_BASE_URL, PREDEFINED_PRODUCT_ID
 from core_utils import get_soup, persist_comment_to_disk, persist_comment_to_disk_in_csv
@@ -33,7 +34,7 @@ def get_comments_based_on_keyword(search):
         persist_comment_to_disk(reviews)
 
 
-def get_comments_with_product_id(product_id):
+def get_comments_with_product_id(product_id, skip_comment):
     reviews = list()
     if product_id is None:
         return reviews
@@ -57,11 +58,19 @@ def get_comments_with_product_id(product_id):
     max_page_number = ''.join([el for el in max_page_number.text if el.isdigit()])
     # print(max_page_number)
     max_page_number = int(max_page_number) if max_page_number else 1
+    skip_comment = skip_comment if skip_comment < max_page_number else 1
 
     max_page_number *= 0.1  # displaying 10 results per page. So if 663 results then ~66 pages.
+    skip_comment *=0.1
     max_page_number = math.ceil(max_page_number)
+    min_page_number = math.ceil(skip_comment)
 
-    for page_number in range(1, max_page_number + 1):
+    for page_number in range(min_page_number, max_page_number + 1):
+        logging.info('{:<10s}      {:2.1f}%   page {} of {}'.format(
+                        ('*'*math.floor(page_number/max_page_number*10)).ljust(10,'.'), 
+                        page_number/max_page_number*100,
+                        page_number, max_page_number)
+                    )
         if page_number > 1:
             product_reviews_link = get_product_reviews_url(product_id, page_number)
             so = get_soup(product_reviews_link)
@@ -92,17 +101,7 @@ def get_comments_with_product_id(product_id):
                 helpful = helpful.strip().split(' ')[0]
             except:
                 # logging.warning('Could not find any helpful-vote-statement tag.')
-                helpful = ''
-
-            # logging.info('***********************************************')
-            # logging.info('TITLE    = ' + title)
-            # logging.info('RATING   = ' + rating)
-            # logging.info('CONTENT  = ' + '\n'.join(textwrap.wrap(body, 80)))
-            # logging.info('HELPFUL  = ' + helpful)
-            # logging.info('AUTHOR URL  = ' + author_url if author_url else '')
-            # logging.info('REVIEW URL  = ' + review_url if review_url else '')
-            # logging.info('REVIEW DATE  = ' + review_date if review_date else '')
-            # logging.info('***********************************************\n')
+                helpful = '0'
 
             print( '{:<20s}'.format(review_date if review_date else '--/--/----') + \
                     '\tRating:' + rating + \
@@ -135,12 +134,15 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--product_id')
+    parser.add_argument('-pid', '--product_id')
+    parser.add_argument('-s', '--skip')
     args = parser.parse_args()
     input_product_id = args.product_id
+    input_skip_comment = args.skip
     product_id = input_product_id if input_product_id else PREDEFINED_PRODUCT_ID
-    logging.info('Product ID:{:>20s}'.format(product_id,))
+    skip_comment = int(input_skip_comment) if input_skip_comment else 0
+    logging.info('Product ID:{:>20s} skip {} comments'.format(product_id, skip_comment))
 
-    _reviews = get_comments_with_product_id(product_id)
+    _reviews = get_comments_with_product_id(product_id, skip_comment)
     
     persist_comment_to_disk(_reviews)

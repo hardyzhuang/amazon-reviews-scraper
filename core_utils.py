@@ -2,6 +2,7 @@ import errno
 from time import sleep
 
 import json
+import string
 import csv 
 import logging
 import os
@@ -51,7 +52,13 @@ def persist_comment_to_disk(reviews):
 
 
 def get_reviews_csv_filename(product_title, product_id):
-    filename = os.path.join(OUTPUT_DIR, '{0:30.30s} - {1}.csv'.format(product_title, product_id))
+    # remove the punctuations and spaces from the product tile, they are incompatible to file system
+    replace_dict = str.maketrans(string.punctuation, '_'*len(string.punctuation))
+    replace_dict.update(str.maketrans(' ','_'))  # replace space
+    product_title = product_title.translate(replace_dict)
+
+    # limit the file name to 64 chars
+    filename = os.path.join(OUTPUT_DIR, '{0:1.64s}-{1}.csv'.format(product_title, product_id))
     exist = os.path.isfile(filename)
     return filename, exist
 
