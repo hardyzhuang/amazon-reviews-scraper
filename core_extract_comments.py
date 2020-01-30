@@ -117,6 +117,7 @@ def get_comments_with_product_id(product_id):
                             'review_url': review_url,
                             'review_date': review_date
                            })
+                           
             review_row = {  'title': title,
                             'rating': rating,
                             'body': body,

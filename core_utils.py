@@ -51,7 +51,7 @@ def persist_comment_to_disk(reviews):
 
 
 def get_reviews_csv_filename(product_title, product_id):
-    filename = os.path.join(OUTPUT_DIR, '{0} - {1}.csv'.format(product_title, product_id))
+    filename = os.path.join(OUTPUT_DIR, '{0:30.30s} - {1}.csv'.format(product_title, product_id))
     exist = os.path.isfile(filename)
     return filename, exist
 
