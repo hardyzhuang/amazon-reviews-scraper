@@ -6,7 +6,7 @@ import textwrap
 import string
 
 from constants import AMAZON_BASE_URL, PREDEFINED_PRODUCT_ID
-from core_utils import get_soup, persist_comment_to_disk, persist_comment_to_disk_in_csv
+from core_utils import get_soup, persist_comment_to_disk_in_csv, extract_product_id
 
 # https://www.amazon.co.jp/product-reviews/B00Z16VF3E/ref=cm_cr_arp_d_paging_btm_1?ie=UTF8&reviewerType=all_reviews&showViewpoints=1&sortBy=helpful&pageNumber=1
 
@@ -19,27 +19,12 @@ def get_product_reviews_url(item_id, page_number=None):
         item_id, page_number)
 
 
-def get_comments_based_on_keyword(search):
-    logging.info('SEARCH = {}'.format(search))
-    url = AMAZON_BASE_URL + '/s/ref=nb_sb_noss_2?url=search-alias%3Daps&field-keywords=' + \
-          search + '&rh=i%3Aaps%2Ck%3A' + search
-    soup = get_soup(url)
+def get_comments_with_product_id(product_id, skip_num):
 
-    product_ids = [div.attrs['data-asin'] for div in soup.find_all('div') if 'data-index' in div.attrs]
-    logging.info('Found {} items.'.format(len(product_ids)))
-    for product_id in product_ids:
-        logging.info('product_id is {}.'.format(product_id))
-        reviews = get_comments_with_product_id(product_id)
-        logging.info('Fetched {} reviews.'.format(len(reviews)))
-        persist_comment_to_disk(reviews)
-
-
-def get_comments_with_product_id(product_id, skip_comment):
-    reviews = list()
     if product_id is None:
-        return reviews
+        return False
     if not re.match('^[A-Z0-9]{10}$', product_id):
-        return reviews
+        return False
 
     product_reviews_link = get_product_reviews_url(product_id)
     so = get_soup(product_reviews_link)
@@ -53,17 +38,17 @@ def get_comments_with_product_id(product_id, skip_comment):
 
     max_page_number = so.find(attrs={'data-hook': 'total-review-count'})
     if max_page_number is None:
-        return reviews
+        return False
     # print(max_page_number.text)
     max_page_number = ''.join([el for el in max_page_number.text if el.isdigit()])
     # print(max_page_number)
     max_page_number = int(max_page_number) if max_page_number else 1
-    skip_comment = skip_comment if skip_comment < max_page_number else 1
+    skip_num = skip_num if skip_num < max_page_number else 1
 
     max_page_number *= 0.1  # displaying 10 results per page. So if 663 results then ~66 pages.
-    skip_comment *=0.1
+    skip_num *=0.1
     max_page_number = math.ceil(max_page_number)
-    min_page_number = math.ceil(skip_comment)
+    min_page_number = math.ceil(skip_num)
 
     for page_number in range(min_page_number, max_page_number + 1):
         logging.info('{:<10s}      {:2.1f}%   page {} of {}'.format(
@@ -107,16 +92,6 @@ def get_comments_with_product_id(product_id, skip_comment):
                     '\tRating:' + rating + \
                     '\t ' + title)
 
-            reviews.append({'title': title,
-                            'rating': rating,
-                            'body': body,
-                            'helpful': helpful,
-                            'product_id': product_id,
-                            'author_url': author_url,
-                            'review_url': review_url,
-                            'review_date': review_date
-                           })
-                           
             review_row = {  'title': title,
                             'rating': rating,
                             'body': body,
@@ -128,21 +103,29 @@ def get_comments_with_product_id(product_id, skip_comment):
                             'product_title': product_title
                         }
             persist_comment_to_disk_in_csv(review_row)
-    return reviews
+    return True
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-pid', '--product_id')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-pid', '--product_id')
+    group.add_argument('-url', '--product_url')
     parser.add_argument('-s', '--skip')
+    
     args = parser.parse_args()
     input_product_id = args.product_id
-    input_skip_comment = args.skip
-    product_id = input_product_id if input_product_id else PREDEFINED_PRODUCT_ID
-    skip_comment = int(input_skip_comment) if input_skip_comment else 0
-    logging.info('Product ID:{:>20s} skip {} comments'.format(product_id, skip_comment))
+    input_product_url = args.product_url
+    input_skip_num = args.skip
 
-    _reviews = get_comments_with_product_id(product_id, skip_comment)
+    product_id = None
+    if input_product_url is not None:
+        product_id = extract_product_id(input_product_url)
+    if product_id is None:
+        product_id = input_product_id if input_product_id else PREDEFINED_PRODUCT_ID
+    skip_num = int(input_skip_num) if input_skip_num else 0
     
-    persist_comment_to_disk(_reviews)
+    logging.info('Product ID:{:>20s} skip {} comments'.format(product_id, skip_num))
+
+    get_comments_with_product_id(product_id, skip_num)
