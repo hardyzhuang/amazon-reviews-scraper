@@ -1,7 +1,6 @@
 import errno
 from time import sleep
 
-import json
 import string
 import csv 
 import logging
@@ -63,7 +62,6 @@ def persist_comment_to_disk_in_csv(review):
     return True
 
 def extract_product_id(link_from_main_page):
-    # e.g. B01H8A7Q42
     p_id = -1
     tags = ['/dp/', '/gp/product/']
     for tag in tags:

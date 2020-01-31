@@ -2,7 +2,6 @@ import argparse
 import logging
 import math
 import re
-import textwrap
 import string
 
 from constants import AMAZON_BASE_URL, PREDEFINED_PRODUCT_ID
@@ -126,6 +125,6 @@ if __name__ == '__main__':
         product_id = input_product_id if input_product_id else PREDEFINED_PRODUCT_ID
     skip_num = int(input_skip_num) if input_skip_num else 0
     
-    logging.info('Product ID:{:>20s} skip {} comments'.format(product_id, skip_num))
+    logging.info('Product ID: {:<20s} skip {} comments'.format(product_id, skip_num))
 
     get_comments_with_product_id(product_id, skip_num)
