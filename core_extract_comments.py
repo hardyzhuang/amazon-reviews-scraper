@@ -76,10 +76,10 @@ def get_comments_with_product_id(product_id, skip_num):
             body = review.find(attrs={'data-hook': 'review-body'}).text.strip()
             title = review.find(attrs={'data-hook': 'review-title'}).text.strip()
             author_url = review.find(attrs={'data-hook': 'genome-widget'}).find('a', href=True)
-            review_url = review.find(attrs={'data-hook': 'review-title'}).attrs['href']
+            review_url = ('{}{}'.format(AMAZON_BASE_URL, review.find(attrs={'data-hook': 'review-title'}).attrs['href']))
             review_date = review.find(attrs={'data-hook': 'review-date'}).text.strip()
             if author_url:
-                author_url = author_url['href'].strip()
+                author_url = ('{}{}'.format(AMAZON_BASE_URL, author_url['href'].strip()))
             try:
                 helpful = review.find(attrs={'data-hook': 'helpful-vote-statement'}).text.strip()
                 helpful = helpful.strip().split(' ')[0]
